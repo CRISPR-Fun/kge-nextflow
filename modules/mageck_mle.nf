@@ -18,6 +18,7 @@ process MAGECK_MLE_ANALYSIS {
     output:
         path "*.gene_summary.txt",  emit: gene_summary
         path "*.sgrna_summary.txt", emit: sgrna_summary
+        path "mageck.mle.log",      emit: mle_log
 
     script:
     prefix = params_obj.output_prefix ?: 'mageck_mle'
@@ -65,6 +66,10 @@ process MAGECK_MLE_ANALYSIS {
         -d "${design_matrix}" \\
         \${OPT_ARGS} \\
         -n "${prefix}"
+
+    # Fixed, unique name so the log never collides with the count log
+    # when both share the same --output_prefix (KGE_REPORT stages them flat)
+    mv "${prefix}.log" "mageck.mle.log"
 
     echo "[MAGECK_MLE] MLE analysis complete."
     """

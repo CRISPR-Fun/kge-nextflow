@@ -5,6 +5,11 @@
  * Plotly charts, dynamic gene tables, pathway enrichment, and
  * FLUTE-style gene classification.
  *
+ * The MAGeCK step logs (count + one per RRA comparison + MLE) are staged
+ * next to the gene summaries so the report can recover the samples
+ * compared in each section (sgRNA line plots) and embed them in the
+ * combined log download.
+ *
  * All bash-argument decisions are pre-computed in Groovy to avoid
  * Nextflow GString template issues with dollar signs in bash strings.
  */
@@ -18,6 +23,7 @@ process KGE_REPORT {
         path count_table_file
         path gene_summaries
         path sgrna_summaries
+        path run_logs              // MAGeCK step logs (count + per-comparison test [+ MLE])
         path design_matrix_file
         val skip_enrichment
         val enrichment_top_n

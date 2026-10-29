@@ -21,7 +21,7 @@ process MAGECK_COUNT {
         path "${prefix}.count.txt",            emit: count_table
         path "${prefix}.count_normalized.txt",  emit: count_normalized
         path "${prefix}.countsummary.txt",      emit: count_summary
-        path "${prefix}.log",                   emit: log
+        path "mageck.count.log",                emit: log
 
     script:
     prefix = params_obj.output_prefix ?: 'mageck'
@@ -83,6 +83,10 @@ process MAGECK_COUNT {
         -n "${prefix}" \\
         \${OPT_ARGS} \\
         --fastq \${FASTQ_ARG}
+
+    # Fixed, unique name so the log never collides with the MLE log
+    # when both share the same --output_prefix (KGE_REPORT stages them flat)
+    mv "${prefix}.log" "mageck.count.log"
 
     echo "[MAGECK_COUNT] Counting complete."
     """

@@ -53,6 +53,11 @@ workflow {
     // ------------------------------------------------------------------
     validate_inputs()
 
+    // MAGeCK step logs (count / per-comparison test / MLE) — collected and
+    // passed to KGE_REPORT so the HTML report can recover each comparison's
+    // samples and embed the logs in the combined log download
+    run_logs_ch = Channel.empty()
+
     // ==================================================================
     // INPUT STAGE: resolve count table from one of three sources
     // ==================================================================
@@ -86,6 +91,7 @@ workflow {
         count_table_ch    = MAGECK_COUNT.out.count_table
         count_norm_ch     = MAGECK_COUNT.out.count_normalized
         count_summary_ch  = MAGECK_COUNT.out.count_summary
+        run_logs_ch       = run_logs_ch.concat(MAGECK_COUNT.out.log)
 
     } else if (params.fastq_dir) {
         // Mode C: start from FASTQ files
@@ -108,6 +114,7 @@ workflow {
         count_table_ch    = MAGECK_COUNT.out.count_table
         count_norm_ch     = MAGECK_COUNT.out.count_normalized
         count_summary_ch  = MAGECK_COUNT.out.count_summary
+        run_logs_ch       = run_logs_ch.concat(MAGECK_COUNT.out.log)
 
     } else {
         log.error "ERROR: provide one of --count_table, --fastq_dir, or --demultiplex"
@@ -135,6 +142,7 @@ workflow {
 
         gene_summaries_ch  = gene_summaries_ch.concat(MAGECK_TEST_RRA.out.gene_summary)
         sgrna_summaries_ch = sgrna_summaries_ch.concat(MAGECK_TEST_RRA.out.sgrna_summary)
+        run_logs_ch        = run_logs_ch.concat(MAGECK_TEST_RRA.out.test_log)
     }
 
     // ==================================================================
@@ -152,13 +160,18 @@ workflow {
 
         gene_summaries_ch  = gene_summaries_ch.concat(MAGECK_MLE_ANALYSIS.out.gene_summary)
         sgrna_summaries_ch = sgrna_summaries_ch.concat(MAGECK_MLE_ANALYSIS.out.sgrna_summary)
+        run_logs_ch        = run_logs_ch.concat(MAGECK_MLE_ANALYSIS.out.mle_log)
 
         design_matrix_ch = Channel.fromPath(params.design_matrix)
     }
 
-    // Collect all summaries into lists for KGE_REPORT
+    // Collect all summaries + step logs into lists for KGE_REPORT
+    // (step logs are staged next to the gene summaries so the report can
+    //  recover each comparison's samples for the sgRNA line plots and
+    //  embed them in the combined log download)
     gene_summaries_collected   = gene_summaries_ch.collect()
     sgrna_summaries_collected  = sgrna_summaries_ch.collect()
+    run_logs_collected         = run_logs_ch.collect()
 
     // Design matrix: real file or NO_DESIGN_MATRIX marker for RRA-only mode
     if (params.design_matrix) {
@@ -176,6 +189,7 @@ workflow {
             count_table_ch,
             gene_summaries_collected,
             sgrna_summaries_collected,
+            run_logs_collected,
             design_matrix_ch,
             params.skip_enrichment,
             params.enrichment_top_n,

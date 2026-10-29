@@ -103,6 +103,13 @@ nextflow run main.nf -profile docker \
 
 That is all you need. The interactive HTML report will be at `results/kge_report/mageck.report.html`.
 
+**What's in the report:**
+
+- Gene/sgRNA summary tables show MAGeCK's exact output values and column names (byte-identical CSV export)
+- sgRNA log2FC line plots show **only the samples compared in each section** (recovered from each comparison's log), with the top-5 depleted/enriched guides of that comparison
+- Enrichment dot plots include a **Download ORA input genes** button with the exact gene list (rank/FDR/LFC) fed to ORA
+- Download section: one combined MAGeCK run log (count + all comparisons + MLE), count table, and count summary
+
 ---
 
 ## Installation

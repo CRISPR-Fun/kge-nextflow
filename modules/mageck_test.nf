@@ -19,6 +19,7 @@ process MAGECK_TEST_RRA {
     output:
         path "${treatment}_vs_${control}.gene_summary.txt",  emit: gene_summary
         path "${treatment}_vs_${control}.sgrna_summary.txt", emit: sgrna_summary
+        path "${treatment}_vs_${control}.log",               emit: test_log
 
     script:
     def prefix = "${treatment}_vs_${control}"
