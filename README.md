@@ -136,6 +136,8 @@ This builds from the `Dockerfile` at the project root, which:
 3. Overlays KGE modifications from `mageck/*.py` onto the installed MAGeCK package
 4. Sets `CMD ["mageck", "--help"]` (no `ENTRYPOINT` — see [Docker Profile Details](#docker-profile-details))
 
+The conda environment (`environment.yml`) also ships the **R + LaTeX toolchain** (`r-base`, `r-gplots`, `r-ggplot2`, `r-xtable`, `r-knitr`, `texinfo`), so `mageck count/test --pdf-report` works out of the box inside the container. Note: the `mobasherbarsi/mageck-kge:0.5.9.5` image on Docker Hub predates this addition — rebuild from source (`docker build -t mobasherbarsi/mageck-kge:0.5.9.5 .`) if you need PDF reports in the container.
+
 ### Conda (Local Development)
 
 Use this if you cannot run Docker or want to develop locally:
@@ -153,6 +155,8 @@ mageck --version
 ```
 
 The `install.sh` script handles all platform detection, including Apple Silicon Rosetta 2 emulation (MAGeCK is x86_64 only) and overlays the KGE modifications onto the installed MAGeCK package.
+
+`environment.yml` includes the R + LaTeX toolchain (R, gplots, ggplot2, xtable, knitr, texinfo), so `--pdf-report` works out of the box after installation.
 
 ### Singularity (HPC Clusters)
 
@@ -876,6 +880,17 @@ singularity pull docker://mobasherbarsi/mageck-kge:0.5.9.5
 ```
 
 This only requires Singularity and network access — no Docker daemon needed.
+
+### PDF report fails: "Rscript was not found" or no .pdf produced
+
+`--pdf-report` (on manual `mageck count` / `mageck test` runs — the pipeline itself only produces the HTML report) renders through R (Sweave/knitr) and LaTeX (`texi2dvi`/`pdflatex`). The KGE mageck overlay now fails loudly with exact fix instructions instead of silently producing no PDF.
+
+- **"Rscript not found on PATH":** the R + LaTeX toolchain is part of `environment.yml` (`r-base`, `r-gplots`, `r-ggplot2`, `r-xtable`, `r-knitr`, `texinfo`). Either re-create the env (`conda env remove -n mageckenv && conda env create -f environment.yml && bash install.sh mageckenv`) or add it to an existing env:
+  ```bash
+  conda install -c conda-forge r-base r-gplots r-ggplot2 r-xtable r-knitr texinfo
+  ```
+- **Sweave errors:** conda-forge R >= 4.4 no longer ships the Sweave package. The overlay automatically falls back to knitr, which reads the same `.Rnw` chunk syntax — make sure `r-knitr` is installed.
+- **"PDF report was NOT generated":** check the R/LaTeX messages above the error — `Rscript`, `knitr`, `texi2dvi` and `pdflatex` must all be resolvable on PATH. The analysis tables (`.gene_summary.txt`, `.sgrna_summary.txt`) are written regardless and are unaffected.
 
 ---
 

@@ -34,7 +34,7 @@ genreporttable<-function(comparisons,ngenes,direction,fdr1,fdr5,fdr25){
 
 The statistics of comparisons is as indicated in the following table. 
 
-<<label=tab1,echo=FALSE,results=tex>>=
+<<label=tab1,echo=FALSE,results="asis">>=
 library(xtable)
 #__GENE_SUMMARY_STAT__
 cptable=genreporttable(comparisons,ngenes,direction,fdr1,fdr5,fdr25);

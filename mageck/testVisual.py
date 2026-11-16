@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 import re
 import os
+import shutil
 import logging
 from mageck.fileOps import *
 from mageck.mageckCount import *
@@ -155,7 +156,7 @@ class VisualRValue:
     latexfile=self.outprefix+'_summary.tex'
     (rnwfile_dir,rnwfile_base)=os.path.split(rnwfile)
     # write code in R file to generate PDF files
-    print("Sweave(\""+rnwfile_base+"\");\nlibrary(tools);\n",file=self.outrfh)
+    print("if (requireNamespace(\"Sweave\", quietly=TRUE)) Sweave::Sweave(\""+rnwfile_base+"\") else knitr::knit(\""+rnwfile_base+"\");\nlibrary(tools);\n",file=self.outrfh)
     print("texi2dvi(\""+os.path.basename(latexfile)+"\",pdf=TRUE);\n",file=self.outrfh)
     # write to Rnw file
     print(self.outrnwstring,file=self.outrnwfh)
@@ -379,7 +380,17 @@ class VisualRValue:
     (rnwfile_dir,rnwfile_base)=os.path.split(rnwfile)
     if rnwfile_dir=='':
       rnwfile_dir='./'
-    systemcall('cd '+rnwfile_dir+'; '+'Rscript '+os.path.basename(rfile))
+    rscript=shutil.which('Rscript')
+    if rscript is None:
+      logging.error('PDF report was requested (--pdf-report) but "Rscript" was not found on PATH.')
+      logging.error('The comparison PDF report is rendered with R (Sweave) and a LaTeX distribution (texi2dvi/pdflatex).')
+      logging.error('Install R + texinfo (texi2dvi) + a TeX distribution into the environment, e.g.:')
+      logging.error('  conda install -c conda-forge r-base r-gplots r-ggplot2 r-xtable r-knitr texinfo')
+      logging.error('  bash Conda_setup/install_texlive2026.sh   (TeX Live 2026, pdflatex & friends)')
+      logging.error('and make sure the environment is activated, then re-run with --pdf-report.')
+      logging.error('The analysis tables (.gene_summary.txt, .sgrna_summary.txt) have been written and are unaffected.')
+      return -1
+    systemcall('cd '+rnwfile_dir+'; '+rscript+' '+os.path.basename(rfile))
     #systemcall('cd '+rnwfile_dir+'; '+ 'R CMD Sweave '+rnwfile_base)
     #systemcall('export SWEAVE_STYLEPATH_DEFAULT="TRUE";'+ 'cd '+rnwfile_dir+'; '+'pdflatex '+os.path.basename(summaryfile))
     # cleaning the fraction pdf
@@ -388,6 +399,15 @@ class VisualRValue:
       systemcall('cd '+rnwfile_dir+'; '+'rm -rf '+os.path.basename(summaryfile)+'.aux')
       systemcall('cd '+rnwfile_dir+'; '+'rm -rf '+os.path.basename(summaryfile)+'.tex')
       systemcall('cd '+rnwfile_dir+'; '+'rm -rf '+os.path.basename(summaryfile)+'.toc')
+    figpdf=os.path.join(rnwfile_dir,self.outprefix+'.pdf')
+    summarypdf=os.path.join(rnwfile_dir,os.path.basename(summaryfile)+'.pdf')
+    if os.path.isfile(figpdf) and os.path.isfile(summarypdf):
+      logging.info('PDF reports generated: '+figpdf+' and '+summarypdf)
+    else:
+      logging.error('PDF report was NOT fully generated. Expected: '+figpdf+' and '+summarypdf)
+      logging.error('Check the R/LaTeX messages above: Rscript, Sweave/knitr, texi2dvi and pdflatex must all be working.')
+      return -1
+    return 0
 
 
 

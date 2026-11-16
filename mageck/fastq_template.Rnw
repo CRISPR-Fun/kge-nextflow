@@ -94,7 +94,7 @@ genclustering<-function(filename,...){
   slmat_log=log2(slmat+1)
 
   result=tryCatch({
-    library(gplots);
+    suppressPackageStartupMessages(library(gplots));
     heatmap.2(cor(slmat_log),trace = 'none',density.info = 'none',cexRow = 0.8,cexCol = 0.8,offsetRow = -0.2,offsetCol = -0.2)
   }, error=function(e){
     heatmap(cor(slmat_log),scale='none',cexRow = 0.8,cexCol = 0.8,cex.axis=0.8,...)
@@ -171,7 +171,7 @@ genpcavar<-function(){
 The statistics of comparisons are listed in Table 1 and Table 2.
 The corresponding fastq files in each row are listed in Table 3.
 
-<<label=tab1,echo=FALSE,results=tex>>=
+<<label=tab1,echo=FALSE,results="asis">>=
 library(xtable)
 #__COUNT_SUMMARY_STAT__
 cptable=genreporttable(filelist,labellist,reads,mappedreads);
@@ -182,7 +182,7 @@ print(xtable(cptable, caption = "Summary of comparisons", label = "tab:one",
     caption.placement = "top"))
 @
 
-<<label=tab2,echo=FALSE,results=tex>>=
+<<label=tab2,echo=FALSE,results="asis">>=
 library(xtable)
 cptable=genreporttable2(filelist,labellist,totalsgrnas,zerocounts,giniindex);
 print(xtable(cptable, caption = "Summary of comparisons", label = "tab:two",
@@ -196,7 +196,7 @@ print(xtable(cptable, caption = "Summary of comparisons", label = "tab:two",
 
 
 
-<<label=tab3,echo=FALSE,results=tex>>=
+<<label=tab3,echo=FALSE,results="asis">>=
 library(xtable)
 cptable=genreporttable3(filelist,labellist);
 print(xtable(cptable, caption = "Summary of samples", label = "tab:three",

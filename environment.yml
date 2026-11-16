@@ -1,8 +1,20 @@
+# MAGeCK (KGE) environment for the kge-nextflow pipeline.
+#
+# Mirrors the portable KGE core spec (CRISPR-Fun/KGE, environment_arrhenius.yml):
+# CROSS-PLATFORM (resolves on linux-64, linux-aarch64, osx-64, osx-arm64) with
+# conda-forge + bioconda only (no `defaults`) so no Anaconda account is needed.
+#
+# Used by: Docker build (Dockerfile), `bash install.sh` (local conda),
+# `bash install_dardel.sh` (Dardel), and the `conda` profile.
+
 name: mageckenv
+
 channels:
   - conda-forge
   - bioconda
-  - defaults
+
+channel_priority: strict
+
 dependencies:
   - python=3.11
   - mageck=0.5.9.5
@@ -11,6 +23,16 @@ dependencies:
   - seaborn
   - adjusttext
   - ipykernel
+  # R + LaTeX toolchain for `mageck count/test --pdf-report` (Sweave/knitr +
+  # texi2dvi + pdflatex). The R packages are noarch on conda-forge, so they
+  # install on every platform.
+  - r-base
+  - r-gplots
+  - r-ggplot2
+  - r-xtable
+  - r-knitr
+  # texinfo provides texi2dvi (R's tools::texi2dvi needs it on PATH).
+  - texinfo
   - pip
   - pip:
     - plotly>=6.0
